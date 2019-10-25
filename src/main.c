@@ -33,6 +33,7 @@
 #include <sys/utsname.h>
 #include <systemd/sd-daemon.h>
 
+#define XORG_START_TIMEOUT_SEC 5
 
 static int xpid;
 
@@ -68,9 +69,9 @@ int main(int argc, char **argv)
 
 		xpid = pid;
 
-		/* wait up to 10 seconds for X server to start */
+		/* wait up to XORG_START_TIMEOUT_SEC seconds for X server to start */
 		clock_gettime(CLOCK_REALTIME, &starttime);
-		timeout.tv_sec = 10;
+		timeout.tv_sec = XORG_START_TIMEOUT_SEC;
 		timeout.tv_nsec = 0;
 		do {
 			int ret =  sigtimedwait(&mask, NULL, &timeout);
@@ -84,7 +85,7 @@ int main(int argc, char **argv)
 				struct timespec currenttime;
 				/* interrupted by other signal, update timeout and retry */
 				clock_gettime(CLOCK_REALTIME, &currenttime);
-				timeout.tv_sec = (starttime.tv_sec + 10) - currenttime.tv_sec;
+				timeout.tv_sec = (starttime.tv_sec + XORG_START_TIMEOUT_SEC) - currenttime.tv_sec;
 				if (currenttime.tv_nsec > starttime.tv_nsec) {
 					timeout.tv_nsec = starttime.tv_nsec + 1000000000L - currenttime.tv_nsec;
 					timeout.tv_sec--;
